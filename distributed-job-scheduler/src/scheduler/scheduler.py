@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import uuid
 from datetime import datetime
 
 from sqlalchemy import func, select
@@ -48,7 +49,7 @@ class DistributedScheduler:
                 continue
 
             with get_db_session() as session:
-                job = session.get(JobModel, queue_job.job_id)
+                job = session.get(JobModel, uuid.UUID(queue_job.job_id))
                 if not job or job.status in {JobStatus.CANCELLED, JobStatus.COMPLETED}:
                     continue
                 job.status = JobStatus.RUNNING

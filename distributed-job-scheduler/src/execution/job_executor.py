@@ -3,12 +3,20 @@
 from __future__ import annotations
 
 import math
+import multiprocessing as mp
 import random
 import time
 from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 import pandas as pd
+
+
+def _mc_chunk(seed_and_n: tuple[int, int]) -> list[float]:
+    """Generate one chunk of Monte Carlo samples in a child process."""
+    seed, n = seed_and_n
+    rng = np.random.default_rng(seed)
+    return rng.normal(loc=0.0, scale=1.0, size=n).tolist()
 
 
 class JobExecutor:
@@ -44,7 +52,12 @@ class JobExecutor:
             result = {"shape": f"{n}x{n}", "checksum": float(np.sum(c))}
         elif task == "monte_carlo_simulation":
             sims = max(1000, int(execution_time * 10000))
-            values = np.random.normal(loc=0.0, scale=1.0, size=sims)
+            workers = max(1, min(4, mp.cpu_count()))
+            chunk = max(1, sims // workers)
+            payload = [(int(time.time()) + idx, chunk) for idx in range(workers)]
+            with mp.Pool(processes=workers) as pool:
+                chunks = pool.map(_mc_chunk, payload)
+            values = np.array([item for part in chunks for item in part])
             result = {"mean": float(np.mean(values)), "std": float(np.std(values)), "samples": sims}
         elif task == "data_processing":
             rows = max(1000, int(execution_time * 2000))

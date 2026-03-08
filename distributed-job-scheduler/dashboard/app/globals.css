@@ -1,0 +1,180 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Root design tokens ──────────────────────────────────────────────── */
+:root {
+  --bg-void: #05060b;
+  --bg-primary: #080a14;
+  --bg-secondary: #0c1021;
+  --bg-surface: #111631;
+  --bg-elevated: #161d3f;
+  --border-dim: rgba(124, 58, 237, 0.06);
+  --border-subtle: rgba(124, 58, 237, 0.12);
+  --border-accent: rgba(124, 58, 237, 0.25);
+  --accent-violet: #7c3aed;
+  --accent-purple: #a855f7;
+  --accent-indigo: #6366f1;
+  --accent-cyan: #06b6d4;
+  --accent-emerald: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-rose: #f43f5e;
+  --glow-violet: rgba(124, 58, 237, 0.15);
+  --glow-purple: rgba(168, 85, 247, 0.12);
+  --text-primary: #e8eaf6;
+  --text-secondary: #8b92b3;
+  --text-muted: #565d80;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg-void);
+  color: var(--text-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Animated noise background ───────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(124, 58, 237, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 80%, rgba(6, 182, 212, 0.05) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(99, 102, 241, 0.04) 0%, transparent 50%);
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.2);
+  border-radius: 100px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, 0.4);
+}
+
+/* ── Selection ───────────────────────────────────────────────────────── */
+::selection {
+  background: rgba(124, 58, 237, 0.3);
+  color: #e8eaf6;
+}
+
+/* ── Glass card system ───────────────────────────────────────────────── */
+@layer components {
+  .glass-card {
+    background: linear-gradient(145deg, rgba(17, 22, 49, 0.7), rgba(12, 16, 33, 0.8));
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    backdrop-filter: blur(24px) saturate(1.2);
+    box-shadow:
+      0 4px 24px rgba(0, 0, 0, 0.4),
+      0 1px 0 rgba(255, 255, 255, 0.02) inset;
+  }
+
+  .glass-card-hover {
+    background: linear-gradient(145deg, rgba(17, 22, 49, 0.7), rgba(12, 16, 33, 0.8));
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    backdrop-filter: blur(24px) saturate(1.2);
+    box-shadow:
+      0 4px 24px rgba(0, 0, 0, 0.4),
+      0 1px 0 rgba(255, 255, 255, 0.02) inset;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .glass-card-hover:hover {
+    border-color: var(--border-accent);
+    box-shadow:
+      0 8px 40px rgba(124, 58, 237, 0.1),
+      0 1px 0 rgba(255, 255, 255, 0.04) inset;
+    transform: translateY(-2px);
+  }
+
+  /* Status colors — vivid neon palette */
+  .status-available {
+    color: #34d399;
+    text-shadow: 0 0 8px rgba(52, 211, 153, 0.3);
+  }
+
+  .status-busy {
+    color: #fbbf24;
+    text-shadow: 0 0 8px rgba(251, 191, 36, 0.3);
+  }
+
+  .status-running {
+    color: #a78bfa;
+    text-shadow: 0 0 8px rgba(167, 139, 250, 0.3);
+  }
+
+  .status-pending {
+    color: #fbbf24;
+    text-shadow: 0 0 8px rgba(251, 191, 36, 0.3);
+  }
+
+  .status-completed {
+    color: #34d399;
+    text-shadow: 0 0 8px rgba(52, 211, 153, 0.3);
+  }
+
+  .status-failed {
+    color: #fb7185;
+    text-shadow: 0 0 8px rgba(251, 113, 133, 0.3);
+  }
+
+  .status-cancelled {
+    color: #64748b;
+  }
+
+  .status-retry_wait {
+    color: #c084fc;
+    text-shadow: 0 0 8px rgba(192, 132, 252, 0.3);
+  }
+
+  .status-draining {
+    color: #22d3ee;
+    text-shadow: 0 0 8px rgba(34, 211, 238, 0.3);
+  }
+}
+
+/* ── Subtle dot grid ─────────────────────────────────────────────────── */
+.bg-grid {
+  background-image: radial-gradient(rgba(124, 58, 237, 0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* ── Pulse glow keyframe ─────────────────────────────────────────────── */
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ── Monospace for values ────────────────────────────────────────────── */
+.font-mono {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}

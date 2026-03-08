@@ -75,7 +75,11 @@ class NodeManager:
             result = session.execute(
                 select(NodeModel).where(NodeModel.status.in_([NodeStatus.AVAILABLE, NodeStatus.BUSY]))
             )
-            return list(result.scalars().all())
+            nodes = list(result.scalars().all())
+            # Expunge so attributes remain accessible after the session closes
+            for n in nodes:
+                session.expunge(n)
+            return nodes
 
     def mark_failed_nodes_and_recover_jobs(self, heartbeat_timeout_seconds: float) -> list[str]:
         """Mark stale nodes as failed and return impacted running jobs to be retried."""

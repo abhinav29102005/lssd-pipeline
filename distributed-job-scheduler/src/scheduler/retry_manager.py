@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import uuid
 
 from src.database.db import get_db_session
 from src.database.models import JobModel, JobStatus
@@ -20,8 +21,9 @@ class RetryManager:
         self.job_queue = job_queue
 
     async def handle_retry(self, job_id: str, error_message: str) -> None:
+        job_uuid = uuid.UUID(job_id)
         with get_db_session() as session:
-            job = session.get(JobModel, job_id)
+            job = session.get(JobModel, job_uuid)
             if not job:
                 return
 
@@ -48,7 +50,7 @@ class RetryManager:
         await asyncio.sleep(delay)
 
         with get_db_session() as session:
-            job = session.get(JobModel, job_id)
+            job = session.get(JobModel, job_uuid)
             if not job or job.status == JobStatus.CANCELLED:
                 return
             job.status = JobStatus.PENDING

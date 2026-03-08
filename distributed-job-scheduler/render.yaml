@@ -1,0 +1,80 @@
+version: "1"
+
+services:
+  # ----------------------------------------------------------------------------------
+  # 1. API Service (FastAPI)
+  # Free tier eligible (Web Service)
+  # ----------------------------------------------------------------------------------
+  - type: web
+    name: scheduler-api
+    plan: free
+    env: docker
+    dockerfilePath: docker/scheduler/Dockerfile
+    dockerCommand: uvicorn src.api.job_api:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /docs
+    envVars:
+      - key: POSTGRES_DSN
+        sync: false # Provide your existing PostgreSQL connection string in the Render Dashboard
+      - key: REDIS_URL
+        sync: false # Provide your existing Redis connection string in the Render Dashboard
+      - key: LOG_LEVEL
+        value: INFO
+
+  # ----------------------------------------------------------------------------------
+  # 2. Dashboard (Next.js)
+  # Free tier eligible (Web Service)
+  # ----------------------------------------------------------------------------------
+  - type: web
+    name: scheduler-dashboard
+    plan: free
+    env: docker
+    # We set the docker context to the dashboard folder where the package.json resides
+    dockerContext: dashboard
+    dockerfilePath: docker/dashboard/Dockerfile
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: scheduler-api
+          envVarKey: RENDER_EXTERNAL_URL
+
+  # ----------------------------------------------------------------------------------
+  # 3. Scheduler Core (Background Worker)
+  # NOTE: Render does not have a free tier for Background Workers.
+  # This will use the lowest paid instance ($7/m) or you can launch it manually 
+  # in a free web service by adding a dummy HTTP server to src.main.
+  # ----------------------------------------------------------------------------------
+  - type: worker
+    name: scheduler-core
+    env: docker
+    dockerfilePath: docker/scheduler/Dockerfile
+    dockerCommand: python -m src.main
+    envVars:
+      - key: POSTGRES_DSN
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: SIMULATE_NODES
+        value: "true"
+      - key: CLUSTER_SIZE
+        value: "50"
+
+  # ----------------------------------------------------------------------------------
+  # 4. Worker Nodes (Background Worker)
+  # NOTE: Render does not have a free tier for Background Workers.
+  # ----------------------------------------------------------------------------------
+  - type: worker
+    name: scheduler-worker-nodes
+    env: docker
+    dockerfilePath: docker/worker/Dockerfile
+    envVars:
+      - key: POSTGRES_DSN
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: DEFAULT_NODE_CPU
+        value: "8"
+      - key: DEFAULT_NODE_MEMORY_MB
+        value: "32768"
+      - key: JOB_FAILURE_RATE
+        value: "0.05"

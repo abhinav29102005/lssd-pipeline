@@ -6,6 +6,7 @@ import asyncio
 import logging
 import os
 import random
+import uuid
 from datetime import datetime
 
 from src.cluster.node_manager import NodeManager
@@ -45,9 +46,10 @@ class WorkerNode:
             if not job_id:
                 await asyncio.sleep(settings.worker_poll_interval)
                 continue
+            job_uuid = uuid.UUID(job_id)
 
             with get_db_session() as session:
-                job = session.get(JobModel, job_id)
+                job = session.get(JobModel, job_uuid)
                 if not job or job.status != JobStatus.RUNNING:
                     self.queue.remove_running(job_id)
                     self.node_manager.decrement_jobs(self.node_id)
@@ -63,7 +65,7 @@ class WorkerNode:
                 )
 
                 with get_db_session() as session:
-                    job = session.get(JobModel, job_id)
+                    job = session.get(JobModel, job_uuid)
                     if not job:
                         continue
                     job.status = JobStatus.COMPLETED
@@ -75,7 +77,7 @@ class WorkerNode:
 
             except Exception as exc:  # noqa: BLE001
                 with get_db_session() as session:
-                    job = session.get(JobModel, job_id)
+                    job = session.get(JobModel, job_uuid)
                     if job:
                         job.status = JobStatus.RETRY_WAIT
                         job.error_message = str(exc)
@@ -86,3 +88,7 @@ class WorkerNode:
                 await self.retry_manager.handle_retry(job_id, str(exc))
             finally:
                 self.node_manager.decrement_jobs(self.node_id)
+
+
+if __name__ == "__main__":
+    asyncio.run(WorkerNode().start())

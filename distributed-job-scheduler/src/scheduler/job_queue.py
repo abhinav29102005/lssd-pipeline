@@ -61,36 +61,67 @@ class JobQueue:
             return None
 
     def push_running(self, job_id: str) -> None:
-        self.client.sadd(RUNNING_QUEUE, job_id)
+        try:
+            self.client.sadd(RUNNING_QUEUE, job_id)
+        except RedisError:
+            logger.exception("Failed to mark job running", extra={"job_id": job_id})
 
     def move_to_completed(self, job_id: str) -> None:
-        self.client.srem(RUNNING_QUEUE, job_id)
-        self.client.sadd(COMPLETED_QUEUE, job_id)
+        try:
+            self.client.srem(RUNNING_QUEUE, job_id)
+            self.client.sadd(COMPLETED_QUEUE, job_id)
+        except RedisError:
+            logger.exception("Failed to mark job completed", extra={"job_id": job_id})
 
     def move_to_failed(self, job_id: str) -> None:
-        self.client.srem(RUNNING_QUEUE, job_id)
-        self.client.sadd(FAILED_QUEUE, job_id)
+        try:
+            self.client.srem(RUNNING_QUEUE, job_id)
+            self.client.sadd(FAILED_QUEUE, job_id)
+        except RedisError:
+            logger.exception("Failed to mark job failed", extra={"job_id": job_id})
 
     def remove_running(self, job_id: str) -> None:
-        self.client.srem(RUNNING_QUEUE, job_id)
+        try:
+            self.client.srem(RUNNING_QUEUE, job_id)
+        except RedisError:
+            logger.exception("Failed to remove running job", extra={"job_id": job_id})
 
     def pending_size(self) -> int:
-        return int(self.client.zcard(PENDING_QUEUE))
+        try:
+            return int(self.client.zcard(PENDING_QUEUE))
+        except RedisError:
+            return 0
 
     def running_size(self) -> int:
-        return int(self.client.scard(RUNNING_QUEUE))
+        try:
+            return int(self.client.scard(RUNNING_QUEUE))
+        except RedisError:
+            return 0
 
     def completed_size(self) -> int:
-        return int(self.client.scard(COMPLETED_QUEUE))
+        try:
+            return int(self.client.scard(COMPLETED_QUEUE))
+        except RedisError:
+            return 0
 
     def failed_size(self) -> int:
-        return int(self.client.scard(FAILED_QUEUE))
+        try:
+            return int(self.client.scard(FAILED_QUEUE))
+        except RedisError:
+            return 0
 
     def publish_assignment(self, node_id: str, job_id: str) -> None:
         key = f"node:{node_id}:jobs"
-        self.client.rpush(key, job_id)
+        try:
+            self.client.rpush(key, job_id)
+        except RedisError:
+            logger.exception("Failed to publish assignment", extra={"job_id": job_id, "node_id": node_id})
 
     def consume_assignment(self, node_id: str) -> str | None:
         key = f"node:{node_id}:jobs"
-        payload = self.client.lpop(key)
-        return payload
+        try:
+            payload = self.client.lpop(key)
+            return payload
+        except RedisError:
+            logger.exception("Failed to consume assignment", extra={"node_id": node_id})
+            return None
