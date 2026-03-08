@@ -10,7 +10,7 @@ from dataclasses import dataclass
 class Settings:
     """Application settings loaded from environment variables."""
 
-    app_name: str = os.getenv("APP_NAME", "distributed-job-scheduler")
+    app_name: str = os.getenv("APP_NAME", "lssd-pipeline")
     log_level: str = os.getenv("LOG_LEVEL", "INFO")
 
     postgres_dsn: str = os.getenv(

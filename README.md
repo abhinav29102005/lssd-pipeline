@@ -193,7 +193,7 @@ Measures scheduling latency, queue wait time, and P95 end-to-end time.
 ## Project Structure
 
 ```
-distributed-job-scheduler/
+lssd-pipeline/
 ├── src/
 │   ├── control_plane/         # Raft consensus + Kubernetes controller
 │   │   ├── raft_consensus.py  # Raft state machine, leader election, log replication
