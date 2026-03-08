@@ -178,3 +178,44 @@ class ClusterController:
             "desired_algorithm": self.desired_algorithm,
             "raft_cluster": self.leader_election.cluster_status(),
         }
+
+
+async def main() -> None:
+    """Run the control plane service standalone."""
+    import logging
+    from src.cluster.node_manager import NodeManager
+    from src.control_plane.leader_election import LeaderElection
+    from src.utils.config import settings
+
+    logging.basicConfig(
+        level=getattr(logging, settings.log_level.upper(), logging.INFO),
+        format="%(asctime)s %(levelname)s %(name)s %(message)s",
+    )
+
+    node_manager = NodeManager()
+
+    # Initialize leader election
+    leader_election = LeaderElection(
+        cluster_size=3,
+        on_leader_change=lambda lid: logging.getLogger(__name__).info(
+            "Leader election result", extra={"leader": lid}
+        ),
+    )
+
+    # Create and run controller
+    controller = ClusterController(
+        leader_election=leader_election,
+        node_manager=node_manager,
+        reconcile_interval=5.0,
+    )
+
+    # Start leader election and controller
+    await asyncio.gather(
+        leader_election.start(),
+        controller.run(),
+    )
+
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())

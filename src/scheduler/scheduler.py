@@ -99,3 +99,30 @@ class DistributedScheduler:
 
     def stop(self) -> None:
         self._running = False
+
+
+async def main() -> None:
+    """Run the scheduler service standalone."""
+    import logging
+    from src.cluster.node_manager import NodeManager
+    from src.scheduler.job_queue import JobQueue
+    from src.utils.config import settings
+
+    logging.basicConfig(
+        level=getattr(logging, settings.log_level.upper(), logging.INFO),
+        format="%(asctime)s %(levelname)s %(name)s %(message)s",
+    )
+
+    node_manager = NodeManager()
+    job_queue = JobQueue()
+    scheduler = DistributedScheduler(job_queue, node_manager)
+
+    # Run both scheduling and metrics loops
+    await asyncio.gather(
+        scheduler.scheduling_loop(),
+        scheduler.metrics_loop(),
+    )
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

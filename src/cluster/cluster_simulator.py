@@ -39,3 +39,29 @@ class ClusterSimulator:
 
     def stop(self) -> None:
         self._running = False
+
+
+async def main() -> None:
+    """Run the cluster simulator standalone."""
+    import logging
+    from src.cluster.node_manager import NodeManager
+    from src.utils.config import settings
+
+    logging.basicConfig(
+        level=getattr(logging, settings.log_level.upper(), logging.INFO),
+        format="%(asctime)s %(levelname)s %(name)s %(message)s",
+    )
+
+    node_manager = NodeManager()
+    simulator = ClusterSimulator(node_manager)
+
+    # Bootstrap cluster with simulated nodes
+    await simulator.bootstrap(settings.cluster_size)
+
+    # Start heartbeat loop
+    await simulator.heartbeat_loop()
+
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
