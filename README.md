@@ -102,15 +102,24 @@ Services:
 - **Dashboard**: http://localhost:3000
 - Scale workers: `docker compose up --scale worker_nodes=100`
 
-### Render Blueprint (Cloud Deployment)
+### Northflank Cloud Deployment (100% Free Tier)
 
-The repository includes a `render.yaml` blueprint optimized for deploying to Render.
+Northflank provides generous free addons and allows deploying this architecture within their free tier limits (2 Services, 2 Addons). To do this, we combine the API, Scheduler, and Virtual Workers into a single container using `start.sh`.
 
-1. Create a free **PostgreSQL** database and a free **Redis** instance (e.g., Upstash or Render Redis).
-2. Connect your GitHub repository to Render and use the **Blueprint** feature to deploy `render.yaml`.
-3. Provide your `POSTGRES_DSN` and `REDIS_URL` in the Render dashboard when prompted.
-
-*Note: The API and Dashboard are configured for the Free Web Services tier. Background workers map to the Starter tier.*
+1. Create a new **Project** on [Northflank](https://northflank.com).
+2. Create **Addons** for your datastores:
+   * **PostgreSQL** (Developer Free plan)
+   * **Redis** (Developer Free plan)
+3. Connect your GitHub repository to deploy the two allowed services:
+   * **Backend Core (API + Scheduler)**: Create a new Combined Service. 
+     - **Build Options**: Select Dockerfile deployment. Path: `/docker/scheduler/Dockerfile`.
+     - **Command Override**: `./start.sh` (This runs both the API and Scheduler concurrently).
+     - **Ports**: Expose port `8000`.
+     - **Environment Variables**: Use Northflank's secret management to link the Addon URIs (`POSTGRES_URI` mapped to `POSTGRES_DSN`, and `REDIS_URI` mapped to `REDIS_URL`). Add `SIMULATE_NODES=true`.
+   * **Dashboard**: Create a new Combined Service. 
+     - **Build Options**: Dockerfile deployment. Path: `/docker/dashboard/Dockerfile`. Context: `/dashboard` (or root, depending on your setup).
+     - **Ports**: Expose port `3000`.
+     - **Environment Variables**: Add `NEXT_PUBLIC_API_URL` and set it to the public URL of your Backend Core service.
 
 ### Local Development
 
