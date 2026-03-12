@@ -33,16 +33,7 @@ ENV PORT=8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD python -c "
-import urllib.request
-import sys
-port = __import__('os').getenv('PORT', '8000')
-try:
-    urllib.request.urlopen(f'http://localhost:{port}/health', timeout=5)
-    sys.exit(0)
-except:
-    sys.exit(1)
-" || exit 1
+    CMD python -c "import urllib.request; import sys; port = __import__('os').getenv('PORT', '8000'); urllib.request.urlopen(f'http://localhost:{port}/health', timeout=5); sys.exit(0)" || exit 1
 
 # Expose the port (documentation purposes)
 EXPOSE $PORT
